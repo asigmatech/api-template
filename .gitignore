@@ -1,0 +1,16 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.idea
+.vs
+
+AsigmaApiTemplate.Api/bin/
+AsigmaApiTemplate.Api/obj/
+AsigmaApiTemplate.Api/logs
+
+AsigmaApiTemplate.Tests/bin/
+AsigmaApiTemplate.Tests/obj/
+
+

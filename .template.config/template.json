@@ -8,15 +8,12 @@
     "sourceName": "AsigmaApiTemplate",
     "tags": {
         "language": "C#",
-        "type": "project"
+        "type": "solution"
     },
     "primaryOutputs": [
         {
-        "path": "AsigmaApiTemplate\\AsigmaApiTemplate.Api\\AsigmaApiTemplate.Api.csproj"
+        "path": "AsigmaApiTemplate.sln"
     },
-        {
-            "path": "AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\AsigmaApiTemplate.Tests.csproj"
-        }
 ],
     "preferNameDirectory": false
 

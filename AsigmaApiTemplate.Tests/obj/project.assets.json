@@ -8735,24 +8735,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ArnoldKigonya\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\Shane\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Asigma\\Projects\\AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\AsigmaApiTemplate.Tests.csproj",
+      "projectUniqueName": "D:\\Asigma\\code\\AsigmaApiTemplate\\AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\AsigmaApiTemplate.Tests.csproj",
       "projectName": "AsigmaApiTemplate.Tests",
-      "projectPath": "D:\\Asigma\\Projects\\AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\AsigmaApiTemplate.Tests.csproj",
-      "packagesPath": "C:\\Users\\ArnoldKigonya\\.nuget\\packages\\",
-      "outputPath": "D:\\Asigma\\Projects\\AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\obj\\",
+      "projectPath": "D:\\Asigma\\code\\AsigmaApiTemplate\\AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\AsigmaApiTemplate.Tests.csproj",
+      "packagesPath": "C:\\Users\\Shane\\.nuget\\packages\\",
+      "outputPath": "D:\\Asigma\\code\\AsigmaApiTemplate\\AsigmaApiTemplate\\AsigmaApiTemplate.Tests\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\ArnoldKigonya\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Users\\Shane\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -8760,15 +8755,14 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "D:\\Asigma\\Projects\\AsigmaApiTemplate\\AsigmaApiTemplate.Api\\AsigmaApiTemplate.Api.csproj": {
-              "projectPath": "D:\\Asigma\\Projects\\AsigmaApiTemplate\\AsigmaApiTemplate.Api\\AsigmaApiTemplate.Api.csproj"
+            "D:\\Asigma\\code\\AsigmaApiTemplate\\AsigmaApiTemplate\\AsigmaApiTemplate.Api\\AsigmaApiTemplate.Api.csproj": {
+              "projectPath": "D:\\Asigma\\code\\AsigmaApiTemplate\\AsigmaApiTemplate\\AsigmaApiTemplate.Api\\AsigmaApiTemplate.Api.csproj"
             }
           }
         }

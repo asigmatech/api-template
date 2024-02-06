@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = AsigmaApiTemplate.Tests
-build_property.ProjectDir = D:\Asigma\Projects\AsigmaApiTemplate\AsigmaApiTemplate.Tests\
+build_property.ProjectDir = D:\Asigma\code\AsigmaApiTemplate\AsigmaApiTemplate\AsigmaApiTemplate.Tests\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
