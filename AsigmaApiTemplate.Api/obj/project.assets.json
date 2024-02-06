@@ -3400,6 +3400,7 @@
       "Npgsql.EntityFrameworkCore.PostgreSQL >= 7.0.11",
       "Scrutor >= 4.2.2",
       "Serilog.AspNetCore >= 8.0.1",
+      "Serilog.Settings.Configuration >= 8.0.0",
       "Serilog.Sinks.Seq >= 6.0.0",
       "Swashbuckle.AspNetCore >= 6.5.0"
     ]
@@ -3512,6 +3513,10 @@
           "Serilog.AspNetCore": {
             "target": "Package",
             "version": "[8.0.1, )"
+          },
+          "Serilog.Settings.Configuration": {
+            "target": "Package",
+            "version": "[8.0.0, )"
           },
           "Serilog.Sinks.Seq": {
             "target": "Package",
