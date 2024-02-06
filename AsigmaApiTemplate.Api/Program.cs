@@ -5,7 +5,6 @@ using Asp.Versioning.ApiExplorer;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -55,6 +54,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var configuration = ConfigHelpers.Load();
 var connectionString = configuration.GetConnectionString("DefaultConnection");
 
+
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString!);
 
@@ -64,8 +64,6 @@ builder.Services.AddHealthChecks()
 
 // builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //     options.UseNpgsql(connectionString!));
-
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.With(new LogEnricher())
@@ -80,7 +78,7 @@ await app.UpdateDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
 {
-    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
     app.UseSwagger();
     app.UseSwaggerUI(options =>
