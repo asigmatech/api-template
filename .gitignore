@@ -4,7 +4,7 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-readme.md
+Readme.md
 
 .vs
 .idea
@@ -12,6 +12,7 @@ AsigmaApiTemplate.sln.DotSettings
 AsigmaApiTemplate.sln.DotSettings.user
 
 **/logs
+
 
 # User-specific files
 *.suo
