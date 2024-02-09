@@ -13,7 +13,7 @@
     "primaryOutputs": [
         {
         "path": "AsigmaApiTemplate.sln"
-    },
+    }
 ],
     "preferNameDirectory": false
 
