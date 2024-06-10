@@ -1,3 +1,4 @@
+using AsigmaApiTemplate.Api.Data;
 using AsigmaApiTemplate.Api.Extensions;
 using AsigmaApiTemplate.Api.Helpers;
 using Asp.Versioning;
@@ -5,6 +6,8 @@ using Asp.Versioning.ApiExplorer;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -12,7 +15,20 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+            var errorString = string.Join(", ", errors);
+            Log.Error("Model validation failed: {Errors}", errorString);
+            var result = new BadRequestObjectResult(context.ModelState);
+ 
+            return result;
+        };
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddApiVersioning(options =>
@@ -58,12 +74,22 @@ var connectionString = configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString!);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("*",
+        corsPolicyBuilder =>
+        {
+            corsPolicyBuilder
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .WithExposedHeaders("content-type")
+                .WithExposedHeaders("X.Pagination");
+        });
+});
 
-//TODO:
-//Uncomment this line and configure your database appropriately
-
-// builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//     options.UseNpgsql(connectionString!));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString!));
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.With(new LogEnricher())
@@ -76,7 +102,7 @@ var app = builder.Build();
 
 await app.UpdateDatabaseAsync();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
     app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
@@ -97,6 +123,8 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
+
+app.UseCors("*");
 
 app.MapHealthChecks("/_health", new HealthCheckOptions
 {

@@ -28,4 +28,11 @@ public class PaginatedList<T> : List<T>
             .ToListAsync();
         return new PaginatedList<T>(items, count, page, pageSize, totalCount);
     }
+     public static async Task<PaginatedList<T>> CreateAsync(IEnumerable<T> source, int page, int pageSize, int totalCount)
+    {
+        var enumerable = source as T[] ?? source.ToArray();
+        var count = await Task.Run(enumerable.Count);
+        var items = await Task.Run(() => enumerable.Skip((page - 1) * pageSize).Take(pageSize).ToList());
+        return new PaginatedList<T>(items, count, page, pageSize, totalCount);
+    }
 }

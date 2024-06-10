@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
   <metadata>
     <id>ASIGMA.AspNetCore.API.Template</id>
-    <version>1.0.1</version>
+    <version>1.0.3</version>
     <description>
       An ASP.NET Core Web API template
     </description>
@@ -15,7 +15,7 @@
     <icon>images\icon.png</icon>
   </metadata>
   <files>
-    <file src="..\AsigmaApiTemplate\*.*" exclude="..\AsigmaApiTemplate\bin\**\*.*;..\AsigmaApiTemplate\obj\**\*.*" target="AsigmaApiTemplate" />
+    <file src="..\AsigmaApiTemplate\**\*.*" exclude="..\AsigmaApiTemplate\bin\**\*.*;..\AsigmaApiTemplate\obj\**\*.*" target="AsigmaApiTemplate" />
     <file src="..\AsigmaApiTemplate\README.md" target="docs\" />
     <file src="..\AsigmaApiTemplate\images\icon.png" target="images\" />
   </files>  

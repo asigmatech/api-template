@@ -1,6 +1,8 @@
+using AsigmaApiTemplate.Api.Models;
+
 namespace AsigmaApiTemplate.Api;
 
-public class WeatherForecast
+public class WeatherForecast:BaseModel
 {
     public DateOnly Date { get; set; }
     public int TemperatureC { get; set; }
