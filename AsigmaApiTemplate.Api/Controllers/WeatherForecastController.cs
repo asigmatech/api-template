@@ -1,8 +1,8 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using AutoMapper;
 using Serilog;
 using System.Net.Mime;
+using AsigmaApiTemplate.Api.Models;
 using AsigmaApiTemplate.Api.Services.GenericServices;
 
 namespace AsigmaApiTemplate.Api.Controllers;
