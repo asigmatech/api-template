@@ -4,6 +4,10 @@ using Serilog;
 using System.Net.Mime;
 using AsigmaApiTemplate.Api.Models;
 using AsigmaApiTemplate.Api.Services.GenericServices;
+using AsigmaApiTemplate.Api.SearchObjects;
+using AsigmaApiTemplate.Api.Helpers;
+using AsigmaApiTemplate.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AsigmaApiTemplate.Api.Controllers;
 
@@ -11,6 +15,7 @@ namespace AsigmaApiTemplate.Api.Controllers;
 [ApiVersion("1.0")]
 [ApiVersion("1.1")]
 [Route("api/v{version:apiVersion}/weather/forecast")]
+[Authorize]
 public class WeatherForecastController : ControllerBase
 {
     private readonly IGenericService<WeatherForecast> _service;
@@ -21,38 +26,74 @@ public class WeatherForecastController : ControllerBase
     }
 
     [MapToApiVersion("1.0")]
+    [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
-    public async Task<IActionResult> GetWeatherForecastsV1Async()
+    public async Task<IActionResult> GetWeatherForecastsV1Async([FromQuery] SearchWeatherForecast search)
     {
-        Log.Information("Received request for weather forecast version 1.0");
+        Log.Information("Received request for weather forecast version 1.0: {@SearchWeatherForecast}", search);
 
         try
         {
-            var result = await _service.GetAllAsync();
-            return Ok(result);
+            var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
+            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var totalPages = Math.Ceiling(result.totalCount / search.PageSize);
+
+            var paginationMetadata = new PaginationMetadata
+            {
+                PageSize = search.PageSize,
+                CurrentPage = search.Page,
+                TotalItems = result.totalCount,
+                TotalPages = totalPages,
+                HasNextPage = search.Page < totalPages,
+                HasPreviousPage = search.Page > 1
+            };
+
+            return Ok(new SearchResponse<WeatherForecast>
+            {
+                PaginationMetadata = paginationMetadata,
+                Data = result.data
+            });
         }
         catch (Exception e)
         {
-            Log.Error("Failed to get weather forecast for version 1.0: {ExceptionMessage}", e.Message);
+            Log.Error("Failed to get weather forecast for version 1.0: {ExceptionMessage} search: {@SearchWeatherForecast}", e.Message, search);
             return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+
         }
     }
 
     [MapToApiVersion("1.1")]
+    [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
-    public async Task<IActionResult> GetWeatherForecastsV2Async()
+    public async Task<IActionResult> GetWeatherForecastsV2Async([FromQuery] SearchWeatherForecast search)
     {
-        Log.Information("Received request for weather forecast version 1.1");
+        Log.Information("Received request for weather forecast version 1.1: {@SearchWeatherForecast}", search);
 
         try
         {
-            var result = await _service.GetAllAsync();
-            var modifiedResult = result.Select(wf => 
+            var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
+            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var modifiedResult = result.data.Select(q =>
             {
-                wf.Summary = "I am version two the elusive";
-                return wf;
+                q.Summary = "I am version two's summary";
+                return q;
             }).ToList();
-            return Ok(modifiedResult);
+            var totalPages = Math.Ceiling(result.totalCount / search.PageSize);
+
+            var paginationMetadata = new PaginationMetadata
+            {
+                PageSize = search.PageSize,
+                CurrentPage = search.Page,
+                TotalItems = result.totalCount,
+                TotalPages = totalPages,
+                HasNextPage = search.Page < totalPages,
+                HasPreviousPage = search.Page > 1
+            };
+            return Ok(new SearchResponse<WeatherForecast>
+            {
+                PaginationMetadata = paginationMetadata,
+                Data = modifiedResult
+            });
         }
         catch (Exception e)
         {
@@ -70,6 +111,12 @@ public class WeatherForecastController : ControllerBase
         try
         {
             var weatherForecast = await _service.GetByIdAsync(id);
+            if (weatherForecast == null)
+            {
+                Log.Error("Weather forecast with ID {Id} not found.", id);
+                return NotFound($"Weather forecast with ID {id} not found.");
+            }
+
             return Ok(weatherForecast);
         }
         catch (Exception e)

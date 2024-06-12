@@ -12,6 +12,5 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(builder);
     }
-    public DbSet<WeatherForecast> WeatherForecasts { get; set; }
 }
 

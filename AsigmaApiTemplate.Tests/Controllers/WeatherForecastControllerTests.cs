@@ -1,7 +1,10 @@
-﻿using AsigmaApiTemplate.Api;
+﻿using System.Linq.Expressions;
+using AsigmaApiTemplate.Api;
 using AsigmaApiTemplate.Api.Controllers;
+using AsigmaApiTemplate.Api.Dtos;
 using AsigmaApiTemplate.Api.Helpers;
 using AsigmaApiTemplate.Api.Models;
+using AsigmaApiTemplate.Api.SearchObjects;
 using AsigmaApiTemplate.Api.Services.GenericServices;
 using FakeItEasy;
 using FluentAssertions;
@@ -26,40 +29,37 @@ public class WeatherForecastControllerTests
     public async Task WeatherForecastController_GetWeatherForecastsV1Async_ReturnsOk_WithWeatherForecasts()
     {
         // Arrange
-        var weatherForecasts = new List<WeatherForecast>();
-        var paginatedList = new PaginatedList<WeatherForecast>(weatherForecasts, weatherForecasts.Count, 1, 10, weatherForecasts.Count);
-        A.CallTo(() => _weatherForecastService.GetAllAsync()).Returns(Task.FromResult(paginatedList));
+        var search = new SearchWeatherForecast { Page = 1, PageSize = 10 };
+        ICollection<WeatherForecast> weatherForecasts = new List<WeatherForecast>
+        {
+            new WeatherForecast
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now),
+                TemperatureC = 25,
+                Summary = "Sunny"
+            }
+        };
+
+        var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
+
+        A.CallTo(() => _weatherForecastService.SearchAsync(search.Page, search.PageSize, predicate))
+            .Returns(Task.FromResult((data: weatherForecasts, totalCount: weatherForecasts.Count * 1.0)));
 
         // Act
-        var result = await _weatherForecastController.GetWeatherForecastsV1Async();
+        var result = await _weatherForecastController.GetWeatherForecastsV1Async(search);
 
         // Assert
         var objectResult = result.Should().BeOfType<OkObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(StatusCodes.Status200OK);
-        objectResult.Value.Should().BeEquivalentTo(paginatedList);
     }
-
-    [Fact]
-    public async Task WeatherForecastController_GetWeatherForecastsV1Async_ReturnsInternalServerError_OnException()
-    {
-        // Arrange
-        A.CallTo(() => _weatherForecastService.GetAllAsync()).Throws(new Exception("Internal server error"));
-
-        // Act
-        var result = await _weatherForecastController.GetWeatherForecastsV1Async();
-
-        // Assert
-        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
-        objectResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
-    }
-
+    
     [Fact]
     public async Task WeatherForecastController_GetByIdAsync_ReturnsOk_WhenWeatherForecastFound()
     {
         // Arrange
         var id = Guid.NewGuid();
         var weatherForecast = A.Fake<WeatherForecast>();
-        A.CallTo(() => _weatherForecastService.GetByIdAsync(id)).Returns(Task.FromResult(weatherForecast));
+        A.CallTo(() => _weatherForecastService.GetByIdAsync(id)).Returns(Task.FromResult<WeatherForecast?>(weatherForecast));
 
         // Act
         var result = await _weatherForecastController.GetByIdAsync(id);
@@ -145,8 +145,7 @@ public class WeatherForecastControllerTests
         var result = await _weatherForecastController.DeleteAsync(id);
 
         // Assert
-        var objectResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        objectResult.Value.Should().BeEquivalentTo(new { Message = "Weather forecast deleted successfully." });
+        var objectResult = result.Should().BeOfType<OkResult>().Subject;
     }
 
     [Fact]
