@@ -1,63 +1,200 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
+using System.Net.Mime;
+using AsigmaApiTemplate.Api.Models;
+using AsigmaApiTemplate.Api.Services.GenericServices;
+using AsigmaApiTemplate.Api.SearchObjects;
+using AsigmaApiTemplate.Api.Helpers;
+using AsigmaApiTemplate.Api.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AsigmaApiTemplate.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
 [ApiVersion("1.1")]
-[Route("api/v{version:apiVersion}/[controller]")]
-
-
+[Route("api/v{version:apiVersion}/weather/forecast")]
+[Authorize]
 public class WeatherForecastController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
+    private readonly IGenericService<WeatherForecast> _service;
+
+    public WeatherForecastController(IGenericService<WeatherForecast> service)
     {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
-    private readonly ILogger<WeatherForecastController> _logger;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger, IHttpContextAccessor httpContextAccessor)
-    {
-        _logger = logger;
-        _httpContextAccessor = httpContextAccessor;
-
+        _service = service;
     }
-    
-    
+
     [MapToApiVersion("1.0")]
+    [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
-    public IEnumerable<WeatherForecast> GetWeatherV1()
+    public async Task<IActionResult> GetWeatherForecastsV1Async([FromQuery] SearchWeatherForecast search)
     {
-        //var correlationId= _httpContextAccessor.GetCorrelationId();
+        Log.Information("Received request for weather forecast version 1.0: {@SearchWeatherForecast}", search);
 
-        //var CorrelationId = Guid.NewGuid();
-        var result =  Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        try
+        {
+            var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
+            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var totalPages = Math.Ceiling(result.totalCount / search.PageSize);
+
+            var paginationMetadata = new PaginationMetadata
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                PageSize = search.PageSize,
+                CurrentPage = search.Page,
+                TotalItems = result.totalCount,
+                TotalPages = totalPages,
+                HasNextPage = search.Page < totalPages,
+                HasPreviousPage = search.Page > 1
+            };
 
+            return Ok(new SearchResponse<WeatherForecast>
+            {
+                PaginationMetadata = paginationMetadata,
+                Data = result.data
+            });
+        }
+        catch (Exception e)
+        {
+            Log.Error("Failed to get weather forecast for version 1.0: {ExceptionMessage} search: {@SearchWeatherForecast}", e.Message, search);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
 
-        return result;
-
+        }
     }
-    
+
     [MapToApiVersion("1.1")]
+    [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
-    public IEnumerable<WeatherForecast> GetWeatherV2()
+    public async Task<IActionResult> GetWeatherForecastsV2Async([FromQuery] SearchWeatherForecast search)
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        Log.Information("Received request for weather forecast version 1.1: {@SearchWeatherForecast}", search);
+
+        try
+        {
+            var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
+            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var modifiedResult = result.data.Select(q =>
             {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = "I am version two the elusive"
-            })
-            .ToArray();
+                q.Summary = "I am version two's summary";
+                return q;
+            }).ToList();
+            var totalPages = Math.Ceiling(result.totalCount / search.PageSize);
+
+            var paginationMetadata = new PaginationMetadata
+            {
+                PageSize = search.PageSize,
+                CurrentPage = search.Page,
+                TotalItems = result.totalCount,
+                TotalPages = totalPages,
+                HasNextPage = search.Page < totalPages,
+                HasPreviousPage = search.Page > 1
+            };
+            return Ok(new SearchResponse<WeatherForecast>
+            {
+                PaginationMetadata = paginationMetadata,
+                Data = modifiedResult
+            });
+        }
+        catch (Exception e)
+        {
+            Log.Error("Failed to get weather forecast for version 1.1: {ExceptionMessage}", e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
     }
-   
+
+    [MapToApiVersion("1.0")]
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetByIdAsync([FromRoute] Guid id)
+    {
+        Log.Information("Received request to retrieve weather forecast with Id ({Id}):", id);
+
+        try
+        {
+            var weatherForecast = await _service.GetByIdAsync(id);
+            if (weatherForecast == null)
+            {
+                Log.Error("Weather forecast with ID {Id} not found.", id);
+                return NotFound($"Weather forecast with ID {id} not found.");
+            }
+
+            return Ok(weatherForecast);
+        }
+        catch (Exception e)
+        {
+            Log.Error("Failed to get weather forecast with Id: {Id}, {ExceptionMessage}", id, e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
+    }
+
+    [MapToApiVersion("1.0")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [HttpPost]
+    public async Task<IActionResult> CreateAsync([FromBody] WeatherForecast model)
+    {
+        Log.Information("Received request to create a weather forecast: {@WeatherForecast}", model);
+
+        try
+        {
+            var result = await _service.InsertAsync(model);
+            Log.Information("Weather forecast created successfully Id: {Id}", model.Id);
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            Log.Error("Failed to create weather forecast: {ExceptionMessage}", e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
+    }
+
+    [MapToApiVersion("1.0")]
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateAsync([FromRoute] Guid id, [FromBody] WeatherForecast model)
+    {
+        Log.Information("Received request to update weather forecast with Id ({Id}):", model.Id);
+
+        if (id != model.Id)
+        {
+            Log.Error("ID in the route does not match the ID in the body.");
+            return BadRequest("ID in the route does not match the ID in the body.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Model Invalid");
+        }
+
+        try
+        {
+            var result = await _service.UpdateAsync(model);
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            Log.Error("Failed to update weather forecast with Id {id}: {Exception}", id, e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
+    }
+
+    [MapToApiVersion("1.0")]
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync([FromRoute] Guid id)
+    {
+        Log.Information("Received request to delete weather forecast with Id: {Id}", id);
+
+        if (id == Guid.Empty)
+        {
+            return BadRequest(id);
+        }
+
+        try
+        {
+            await _service.DeleteAsync(id);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            Log.Error("Failed to delete weather forecast with Id {id}: {Exception}", id, e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
+    }
 }

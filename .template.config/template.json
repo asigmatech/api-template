@@ -6,6 +6,13 @@
     "name": "ASIGMA ASP.NET Core Web API",
     "shortName": "asigmaaspwebapi",
     "sourceName": "AsigmaApiTemplate",
+    "sourceInclude": [
+        "**/*"
+    ],
+    "sourceExclude": [
+        "README.md",
+        "images/**"
+    ],
     "tags": {
         "language": "C#",
         "type": "solution"
