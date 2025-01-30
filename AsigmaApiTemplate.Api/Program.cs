@@ -1,34 +1,23 @@
+using AsigmaApiTemplate.Api.AppSettings.Options;
 using AsigmaApiTemplate.Api.Data;
 using AsigmaApiTemplate.Api.Extensions;
 using AsigmaApiTemplate.Api.Helpers;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
-using HealthChecks.UI.Client;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = context =>
-        {
-            var errors = context.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-            var errorString = string.Join(", ", errors);
-            Log.Error("Model validation failed: {Errors}", errorString);
-            var result = new BadRequestObjectResult(context.ModelState);
- 
-            return result;
-        };
-    });
-
+builder.Services.AddCors();
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddApiVersioning(options =>
@@ -46,20 +35,49 @@ builder.Services.AddApiVersioning().AddApiExplorer(options =>
 });
 
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.OperationFilter<SwaggerDefaultValues>();
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
+
+var configuration = ConfigHelpers.Load();
+
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddDependencyInjection();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        //TODO
-        //Enter the details of the identity authority
-        
-        options.Authority = "https://#";
-        
+        //Configure your Identity Authority in appSettings
+
+        var configSection = configuration.GetSection(IdentitySettings.Identity);
+        var identity = configSection.Get<IdentitySettings>();
+        options.Authority = identity!.AuthAddress;
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience = false,
@@ -67,12 +85,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-var configuration = ConfigHelpers.Load();
-var connectionString = configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddAuthorization(options =>
+{
+    //Decorate your controllers with [Authorize(Policy = "ApiScope")]
 
-
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString!);
+    options.AddPolicy("ApiScope", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("scope", "<Replace with the desired scope>");
+    });
+});
 
 builder.Services.AddCors(options =>
 {
@@ -88,8 +110,33 @@ builder.Services.AddCors(options =>
         });
 });
 
+var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString!);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString!));
+
+builder.Services.AddHangfire(config =>
+{
+    config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseDefaultTypeSerializer()
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UsePostgreSqlStorage(
+            options => options.UseNpgsqlConnection(connectionString),
+            new PostgreSqlStorageOptions()
+        );
+    GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
+    {
+        Attempts = 7, // Number of retry attempts
+        DelaysInSeconds = [10, 20, 30, 1800, 3600, 7200, 10800], // Delays between retries in seconds
+        OnAttemptsExceeded = AttemptsExceededAction.Fail // Fails after retry limit exceeded
+    });
+});
+
+builder.Services.AddHangfireServer();
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.With(new LogEnricher())
@@ -110,7 +157,7 @@ if (!app.Environment.IsProduction())
     app.UseSwaggerUI(options =>
     {
         var descriptions = app.DescribeApiVersions();
-        
+
         foreach (var description in descriptions)
         {
             var url = $"/swagger/{description.GroupName}/swagger.json";
@@ -120,17 +167,17 @@ if (!app.Environment.IsProduction())
     });
 }
 
+app.UseHangFireJobs();
+
+app.UseCors("*");
+
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 
-app.UseCors("*");
+app.MapHealthChecks("/_health");
 
-app.MapHealthChecks("/_health", new HealthCheckOptions
-{
-    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-});
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

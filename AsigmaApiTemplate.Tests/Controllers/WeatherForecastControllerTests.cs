@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using AsigmaApiTemplate.Api;
-using AsigmaApiTemplate.Api.Controllers;
-using AsigmaApiTemplate.Api.Dtos;
+﻿using AsigmaApiTemplate.Api.Controllers;
 using AsigmaApiTemplate.Api.Helpers;
 using AsigmaApiTemplate.Api.Models;
 using AsigmaApiTemplate.Api.SearchObjects;
@@ -10,7 +7,6 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace AsigmaApiTemplate.Tests.Controllers;
 

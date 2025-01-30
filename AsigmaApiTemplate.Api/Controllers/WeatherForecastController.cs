@@ -11,20 +11,18 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AsigmaApiTemplate.Api.Controllers;
 
+
+//TODO:
+//Add the fact that the appSettings has missing/dummy values that need to be replaced
+//Populate the ReadMe with info about HangFire and what to do 
+//ReadMe to have info on how to modify things in the Program.cs
 [ApiController]
 [ApiVersion("1.0")]
 [ApiVersion("1.1")]
 [Route("api/v{version:apiVersion}/weather/forecast")]
 [Authorize]
-public class WeatherForecastController : ControllerBase
+public class WeatherForecastController(IGenericService<WeatherForecast> service) : ControllerBase
 {
-    private readonly IGenericService<WeatherForecast> _service;
-
-    public WeatherForecastController(IGenericService<WeatherForecast> service)
-    {
-        _service = service;
-    }
-
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
@@ -35,7 +33,7 @@ public class WeatherForecastController : ControllerBase
         try
         {
             var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
-            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var result = await service.SearchAsync(search.Page, search.PageSize, predicate);
             var totalPages = Math.Ceiling(result.totalCount / search.PageSize);
 
             var paginationMetadata = new PaginationMetadata
@@ -72,7 +70,7 @@ public class WeatherForecastController : ControllerBase
         try
         {
             var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
-            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var result = await service.SearchAsync(search.Page, search.PageSize, predicate);
             var modifiedResult = result.data.Select(q =>
             {
                 q.Summary = "I am version two's summary";
@@ -110,7 +108,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            var weatherForecast = await _service.GetByIdAsync(id);
+            var weatherForecast = await service.GetByIdAsync(id);
             if (weatherForecast == null)
             {
                 Log.Error("Weather forecast with ID {Id} not found.", id);
@@ -135,7 +133,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            var result = await _service.InsertAsync(model);
+            var result = await service.InsertAsync(model);
             Log.Information("Weather forecast created successfully Id: {Id}", model.Id);
             return Ok(result);
         }
@@ -165,7 +163,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            var result = await _service.UpdateAsync(model);
+            var result = await service.UpdateAsync(model);
             return Ok(result);
         }
         catch (Exception e)
@@ -188,7 +186,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            await _service.DeleteAsync(id);
+            await service.DeleteAsync(id);
             return Ok();
         }
         catch (Exception e)

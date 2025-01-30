@@ -3,50 +3,65 @@ using AsigmaApiTemplate.Api.Data;
 using AsigmaApiTemplate.Api.Helpers;
 using AsigmaApiTemplate.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace AsigmaApiTemplate.Api.Repositories.GenericRepositories;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : BaseModel
+public class GenericRepository<T>(ApplicationDbContext context) : IGenericRepository<T>
+    where T : BaseModel
 {
-    private readonly ApplicationDbContext _context;
-    private readonly DbSet<T> _entities;
+    private readonly DbSet<T> _entities = context.Set<T>();
 
-    public GenericRepository(ApplicationDbContext context)
+    public async Task<(List<T> data, double totalCount)> SearchAsync(int page, int pageSize,
+        Expression<Func<T, bool>>? filters, Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
     {
-        _context = context;
-        _entities = context.Set<T>();
-    }
+        var query = _entities
+            .Where(q => !q.IsDeleted);
 
-    public async Task DeleteAsync(Guid id)
-    {
-        var entity = await _entities.SingleOrDefaultAsync(s => s.Id == id);
-
-        if (entity == null) throw new Exception("Entity not found");
-        entity.IsDeleted = true;
-
-        await UpdateAsync(entity);
-
-    }
-    public async Task<(ICollection<T> data, double totalCount)> SearchAsync(int page, int pageSize,
-    params Expression<Func<T, bool>>[] filters)
-    {
-        IQueryable<T> query = _context.Set<T>().Where(q => !q.IsDeleted);
-
-        if (filters.Any())
+        if (filters != null)
         {
-            query = filters.Aggregate(query, (current, filter) => current.Where(filter));
+            query = query.Where(filters);
+        }
+
+        if (includes != null)
+        {
+            query = includes(query);
         }
 
         var totalCount = await query.CountAsync();
-        var result = await query.OrderByDescending(q => q.DateCreated)
+        var result = await query
+            .OrderByDescending(q => q.DateCreated)
             .ThenBy(q => q.DateUpdated).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return (result, totalCount);
     }
+
+    public async Task<List<T>> SearchAsync(Expression<Func<T, bool>>[]? filters,
+        Func<IQueryable<T>, IIncludableQueryable<T, object>>? includes = null)
+    {
+        var query = _entities
+            .Where(q => !q.IsDeleted);
+
+        if (filters != null && filters.Any())
+        {
+            query = filters.Aggregate(query, (current, filter) => current.Where(filter));
+        }
+
+        if (includes != null)
+        {
+            query = includes(query);
+        }
+
+        var result = await query
+            .OrderByDescending(q => q.DateCreated)
+            .ThenBy(q => q.DateUpdated).ToListAsync();
+
+        return result;
+    }
+
     public async Task<PaginatedList<T>> GetAllAsync()
     {
-        IQueryable<T> query = _entities
-        .Where(q => !q.IsDeleted);
+        IQueryable<T> query = _entities;
 
         var totalCount = await query.CountAsync();
 
@@ -56,6 +71,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseModel
 
         return await PaginatedList<T>.CreateAsync(source, 1, totalCount, totalCount);
     }
+
     public async Task<T?> GetByIdAsync(Guid id, params Expression<Func<T, object>>[] includeProperties)
     {
         var query = _entities
@@ -70,19 +86,26 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseModel
             }
         }
 
-        return await query.FirstOrDefaultAsync();
+        return await query.AsNoTracking().FirstOrDefaultAsync();
     }
-
 
     public async Task<T> InsertAsync(T entity)
     {
         if (entity == null) throw new ArgumentNullException(nameof(entity));
 
+
         await _entities.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return entity;
+    }
 
+    public async Task<List<T>> InsertRangeAsync(List<T> entities)
+    {
+        await context.AddRangeAsync(entities);
+        await context.SaveChangesAsync();
+
+        return entities;
     }
 
     public async Task<T> UpdateAsync(T entity)
@@ -92,8 +115,41 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseModel
         entity.DateUpdated = DateTime.UtcNow;
 
         _entities.Update(entity);
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return entity;
+    }
+
+    public async Task<List<T>> UpdateRangeAsync(List<T> entities)
+    {
+        context.UpdateRange(entities);
+        await context.SaveChangesAsync();
+
+        return entities;
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        var entity = await _entities.SingleOrDefaultAsync(s => s.Id == id);
+
+        if (entity == null) throw new Exception("Entity not found");
+        entity.IsDeleted = true;
+
+        await UpdateAsync(entity);
+    }
+
+    public async Task DeleteRangeAsync(List<Guid> ids)
+    {
+        var entities = new List<T>();
+
+        foreach (var id in ids)
+        {
+            var entity = await _entities.SingleOrDefaultAsync(p => p.Id == id);
+            if (entity == null) throw new Exception("Entity not found");
+            entity.IsDeleted = true;
+            entities.Add(entity);
+        }
+
+        await UpdateRangeAsync(entities);
     }
 }

@@ -1,5 +1,3 @@
-using AsigmaApiTemplate.Api.Models;
-
 namespace AsigmaApiTemplate.Api.Models;
 
 public class WeatherForecast:BaseModel
