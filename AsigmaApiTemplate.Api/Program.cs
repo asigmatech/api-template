@@ -85,16 +85,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    //Decorate your controllers with [Authorize(Policy = "ApiScope")]
-
-    options.AddPolicy("ApiScope", policy =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("ApiScope", policy =>
     {
         policy.RequireAuthenticatedUser();
         policy.RequireClaim("scope", "<Replace with the desired scope>");
     });
-});
 
 builder.Services.AddCors(options =>
 {

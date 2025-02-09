@@ -13,7 +13,7 @@ public static class ConfigHelpers
     {
         env ??= EnvHelper.GetEnvironment();
         configurationBuilder
-            .AddJsonFile($"AppSettings/appsettings.json")
+            .AddJsonFile("AppSettings/appsettings.json")
             .AddJsonFile($"AppSettings/appsettings.{env}.json", true);
     }
 

@@ -1,8 +1,8 @@
 namespace AsigmaApiTemplate.Api.AppSettings.Options;
 
-public static class BaseUrls
+public class BaseUrls
 {
     public const string ServiceBaseUrlsSection = "ServiceBaseUrls";
     
-    public static readonly string Weather  = "Weather";
+    public readonly string WeatherStation  = "Weather";
 }
