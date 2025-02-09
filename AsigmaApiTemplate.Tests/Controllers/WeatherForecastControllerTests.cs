@@ -3,6 +3,7 @@ using AsigmaApiTemplate.Api.Helpers;
 using AsigmaApiTemplate.Api.Models;
 using AsigmaApiTemplate.Api.SearchObjects;
 using AsigmaApiTemplate.Api.Services.GenericServices;
+using AsigmaApiTemplate.Api.Services.Requests;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -17,8 +18,9 @@ public class WeatherForecastControllerTests
 
     public WeatherForecastControllerTests()
     {
+        var requestService = A.Fake<IRequestService>();
         _weatherForecastService = A.Fake<IGenericService<WeatherForecast>>();
-        _weatherForecastController = new WeatherForecastController(_weatherForecastService);
+        _weatherForecastController = new WeatherForecastController(_weatherForecastService, requestService);
     }
 
     [Fact]
