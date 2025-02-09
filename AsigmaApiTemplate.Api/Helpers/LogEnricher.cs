@@ -13,6 +13,7 @@ public class LogEnricher : ILogEventEnricher
         var correlationId = httpContextAccessor.GetRouteIdParameter("CorrelationId");
         var userId = httpContextAccessor.GetRouteIdParameter("UserId");
         var clientId = httpContextAccessor.GetRouteIdParameter("ClientId");
+        var service= ConfigHelpers.Load().GetSection("Service").Value;
         
 
         var environment = ConfigHelpers.EnvHelper.GetEnvironment();
@@ -22,7 +23,8 @@ public class LogEnricher : ILogEventEnricher
             CreateProperty("CorrelationId", correlationId ?? Guid.Empty, propertyFactory),
             CreateProperty("UserId", userId ?? Guid.Empty, propertyFactory),
             CreateProperty("ClientId", clientId ?? Guid.Empty, propertyFactory),
-            CreateProperty("Environment", environment, propertyFactory)
+            CreateProperty("Environment", environment, propertyFactory),
+            CreateProperty("Service", service!, propertyFactory)
         };
 
         foreach (var prop in logEventProperties)

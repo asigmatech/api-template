@@ -9,8 +9,8 @@ public class WeatherForecastModelTests
     {
         // Arrange
         var date = DateOnly.FromDateTime(DateTime.Now);
-        var temperatureC = 20;
-        var summary = "Sunny";
+        const int temperatureC = 20;
+        const string summary = "Sunny";
 
         var weatherForecast = new WeatherForecast
         {

@@ -8,8 +8,7 @@ namespace AsigmaApiTemplate.Tests.Generic;
 
 public class AuthTests
 {
-    [Theory]
-    [MemberData(nameof(GetAllControllerTypes))]
+    [Theory, MemberData(nameof(GetAllControllerTypes))]
     public void Controllers_HaveAuthorizeAttribute(Type controllerType)
     {
         // Arrange

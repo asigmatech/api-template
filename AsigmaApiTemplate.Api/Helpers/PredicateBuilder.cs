@@ -9,7 +9,7 @@ public static class PredicateBuilder
     public static Expression<Func<WeatherForecast, bool>> BuildWeatherForecastPredicate(SearchWeatherForecast request)
     {
         Expression<Func<WeatherForecast, bool>> predicate = q => true;
-        
+
         if (request.Id.HasValue)
         {
             predicate = predicate.AndAlso(q => q.Id == request.Id.Value);
@@ -23,6 +23,11 @@ public static class PredicateBuilder
         if (request.TemperatureC.HasValue)
         {
             predicate = predicate.AndAlso(q => q.TemperatureC == request.TemperatureC.Value);
+        }
+
+        if (request.Ids.Count != 0)
+        {
+            predicate = predicate.AndAlso(q => request.Ids.Contains(q.Id));
         }
 
         return predicate;

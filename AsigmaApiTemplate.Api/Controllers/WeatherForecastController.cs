@@ -1,30 +1,33 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
-using Serilog;
 using System.Net.Mime;
-using AsigmaApiTemplate.Api.Models;
-using AsigmaApiTemplate.Api.Services.GenericServices;
-using AsigmaApiTemplate.Api.SearchObjects;
-using AsigmaApiTemplate.Api.Helpers;
+using AsigmaApiTemplate.Api.AppSettings.Options;
 using AsigmaApiTemplate.Api.Dtos;
+using AsigmaApiTemplate.Api.Helpers;
+using AsigmaApiTemplate.Api.Models;
+using AsigmaApiTemplate.Api.SearchObjects;
+using AsigmaApiTemplate.Api.Services.GenericServices;
+using AsigmaApiTemplate.Api.Services.Requests;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace AsigmaApiTemplate.Api.Controllers;
 
+//TODO:
+//Add the fact that the appSettings has missing/dummy values that need to be replaced
+//Populate the ReadMe with info about HangFire and what to do 
+//ReadMe to have info on how to modify things in the Program.cs
+//Write about the use of Named HttpClients
 [ApiController]
 [ApiVersion("1.0")]
 [ApiVersion("1.1")]
 [Route("api/v{version:apiVersion}/weather/forecast")]
 [Authorize]
-public class WeatherForecastController : ControllerBase
+public class WeatherForecastController(
+    IGenericService<WeatherForecast> weatherForecastService,
+    IRequestService requestService) : ControllerBase
 {
-    private readonly IGenericService<WeatherForecast> _service;
-
-    public WeatherForecastController(IGenericService<WeatherForecast> service)
-    {
-        _service = service;
-    }
-
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
@@ -35,7 +38,8 @@ public class WeatherForecastController : ControllerBase
         try
         {
             var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
-            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var result = await weatherForecastService.SearchAsync(search.Page, search.PageSize, predicate,
+                source => source.Include(s => s.AffectedRegions));
             var totalPages = Math.Ceiling(result.totalCount / search.PageSize);
 
             var paginationMetadata = new PaginationMetadata
@@ -56,9 +60,10 @@ public class WeatherForecastController : ControllerBase
         }
         catch (Exception e)
         {
-            Log.Error("Failed to get weather forecast for version 1.0: {ExceptionMessage} search: {@SearchWeatherForecast}", e.Message, search);
+            Log.Error(
+                "Failed to get weather forecast for version 1.0: {ExceptionMessage} search: {@SearchWeatherForecast}",
+                e.Message, search);
             return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-
         }
     }
 
@@ -72,7 +77,7 @@ public class WeatherForecastController : ControllerBase
         try
         {
             var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
-            var result = await _service.SearchAsync(search.Page, search.PageSize, predicate);
+            var result = await weatherForecastService.SearchAsync(search.Page, search.PageSize, predicate);
             var modifiedResult = result.data.Select(q =>
             {
                 q.Summary = "I am version two's summary";
@@ -110,7 +115,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            var weatherForecast = await _service.GetByIdAsync(id);
+            var weatherForecast = await weatherForecastService.GetByIdAsync(id);
             if (weatherForecast == null)
             {
                 Log.Error("Weather forecast with ID {Id} not found.", id);
@@ -135,7 +140,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            var result = await _service.InsertAsync(model);
+            var result = await weatherForecastService.InsertAsync(model);
             Log.Information("Weather forecast created successfully Id: {Id}", model.Id);
             return Ok(result);
         }
@@ -165,7 +170,7 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            var result = await _service.UpdateAsync(model);
+            var result = await weatherForecastService.UpdateAsync(model);
             return Ok(result);
         }
         catch (Exception e)
@@ -188,12 +193,35 @@ public class WeatherForecastController : ControllerBase
 
         try
         {
-            await _service.DeleteAsync(id);
+            await weatherForecastService.DeleteAsync(id);
             return Ok();
         }
         catch (Exception e)
         {
             Log.Error("Failed to delete weather forecast with Id {id}: {Exception}", id, e.Message);
+            return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+        }
+    }
+
+
+    [MapToApiVersion("1.0")]
+    [HttpGet("api")]
+    public async Task<IActionResult> SendApiRequestAsync()
+    {
+        Log.Information("Received request to get weather forecast");
+
+        try
+        {
+            var baseUrls = new BaseUrls();
+            await requestService.GetAsync("weather/update", baseUrls.WeatherStation, new { day = DateTime.Today });
+
+            //Do what you need to with the returned object
+
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            Log.Error("Api request failed: {Exception}", e.Message);
             return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
         }
     }

@@ -13,10 +13,10 @@ public static class ConfigHelpers
     {
         env ??= EnvHelper.GetEnvironment();
         configurationBuilder
-            .AddJsonFile($"AppSettings/appsettings.json")
-            .AddJsonFile($"AppSettings/appsettings.{env}.json");
+            .AddJsonFile("AppSettings/appsettings.json")
+            .AddJsonFile($"AppSettings/appsettings.{env}.json", true);
     }
-    
+
     public enum Env
     {
         Development,
@@ -29,8 +29,8 @@ public static class ConfigHelpers
     {
         public static Env GetEnvironment()
         {
-            var environmentName =   Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
-    
+            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
             ArgumentNullException.ThrowIfNull(environmentName);
             return (Env)Enum.Parse(typeof(Env), environmentName);
         }

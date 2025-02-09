@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using AsigmaApiTemplate.Api;
-using AsigmaApiTemplate.Api.Controllers;
-using AsigmaApiTemplate.Api.Dtos;
+﻿using AsigmaApiTemplate.Api.Controllers;
 using AsigmaApiTemplate.Api.Helpers;
 using AsigmaApiTemplate.Api.Models;
 using AsigmaApiTemplate.Api.SearchObjects;
@@ -10,7 +7,6 @@ using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace AsigmaApiTemplate.Tests.Controllers;
 
@@ -30,9 +26,9 @@ public class WeatherForecastControllerTests
     {
         // Arrange
         var search = new SearchWeatherForecast { Page = 1, PageSize = 10 };
-        ICollection<WeatherForecast> weatherForecasts = new List<WeatherForecast>
+        var weatherForecasts = new List<WeatherForecast>
         {
-            new WeatherForecast
+            new()
             {
                 Date = DateOnly.FromDateTime(DateTime.Now),
                 TemperatureC = 25,
@@ -42,7 +38,7 @@ public class WeatherForecastControllerTests
 
         var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
 
-        A.CallTo(() => _weatherForecastService.SearchAsync(search.Page, search.PageSize, predicate))
+        A.CallTo(() => _weatherForecastService.SearchAsync(search.Page, search.PageSize, predicate, null))
             .Returns(Task.FromResult((data: weatherForecasts, totalCount: weatherForecasts.Count * 1.0)));
 
         // Act
@@ -52,14 +48,15 @@ public class WeatherForecastControllerTests
         var objectResult = result.Should().BeOfType<OkObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(StatusCodes.Status200OK);
     }
-    
+
     [Fact]
     public async Task WeatherForecastController_GetByIdAsync_ReturnsOk_WhenWeatherForecastFound()
     {
         // Arrange
         var id = Guid.NewGuid();
         var weatherForecast = A.Fake<WeatherForecast>();
-        A.CallTo(() => _weatherForecastService.GetByIdAsync(id)).Returns(Task.FromResult<WeatherForecast?>(weatherForecast));
+        A.CallTo(() => _weatherForecastService.GetByIdAsync(id))
+            .Returns(Task.FromResult<WeatherForecast?>(weatherForecast));
 
         // Act
         var result = await _weatherForecastController.GetByIdAsync(id);
