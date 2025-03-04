@@ -10,15 +10,11 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace AsigmaApiTemplate.Api.Controllers;
 
-//TODO:
-//Add the fact that the appSettings has missing/dummy values that need to be replaced
-//Populate the ReadMe with info about HangFire and what to do 
-//ReadMe to have info on how to modify things in the Program.cs
-//Write about the use of Named HttpClients
 [ApiController]
 [ApiVersion("1.0")]
 [ApiVersion("1.1")]
@@ -26,8 +22,12 @@ namespace AsigmaApiTemplate.Api.Controllers;
 [Authorize]
 public class WeatherForecastController(
     IGenericService<WeatherForecast> weatherForecastService,
-    IRequestService requestService) : ControllerBase
+    IRequestService requestService,
+    IOptions<ServiceBaseUrlOptions> serviceBaseUrlOptions)
+    : ControllerBase
 {
+    private readonly ServiceBaseUrlOptions _serviceBaseUrlOptions = serviceBaseUrlOptions.Value;
+
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(SearchResponse<WeatherForecast>), StatusCodes.Status200OK)]
     [HttpGet]
@@ -203,7 +203,6 @@ public class WeatherForecastController(
         }
     }
 
-
     [MapToApiVersion("1.0")]
     [HttpGet("api")]
     public async Task<IActionResult> SendApiRequestAsync()
@@ -212,10 +211,8 @@ public class WeatherForecastController(
 
         try
         {
-            var baseUrls = new BaseUrls();
-            await requestService.GetAsync("weather/update", baseUrls.WeatherStation, new { day = DateTime.Today });
-
-            //Do what you need to with the returned object
+            await requestService.GetAsync("weather/update", _serviceBaseUrlOptions.WeatherStation,
+                new { day = DateTime.Today });
 
             return Ok();
         }

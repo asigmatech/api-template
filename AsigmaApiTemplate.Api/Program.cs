@@ -8,9 +8,11 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Polly;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -65,18 +67,50 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-var configuration = ConfigHelpers.Load();
+var envConfiguration = ConfigHelpers.Load();
 
-builder.Services.AddAutoMapper(typeof(Program));
+//Add the Option Classes to the Dependency Injection Container. See Sample Controller for how to access your options.
+//Read more here -> https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-8.0
+
+builder.Services.Configure<IdentityOptions>(envConfiguration.GetSection(IdentityOptions.Identity));
+builder.Services.Configure<ServiceBaseUrlOptions>(envConfiguration.GetSection(ServiceBaseUrlOptions.ServiceBaseUrls));
+
+var serviceBaseUrlSection =
+    envConfiguration.GetSection(ServiceBaseUrlOptions.ServiceBaseUrls);
+
+var serviceBaseUrlChildren = serviceBaseUrlSection.GetChildren().ToList();
+
+
+//This registers all the URLs in the ServiceBaseUrls section of your appSettings to the DI container as named clients
+//Read more here -> https://www.aspnetmonsters.com/2016/08/2016-08-27-httpclientwrong/ and
+//Here -> https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/use-httpclientfactory-to-implement-resilient-http-requests
+if (serviceBaseUrlChildren.Count > 0)
+{
+    foreach (var kvp in serviceBaseUrlChildren.ToDictionary(
+                 child => child.Key,
+                 child => child.Value))
+    {
+        builder.Services.AddHttpClient(kvp.Key,
+                client =>
+                {
+                    if (kvp.Value != null) client.BaseAddress = new Uri(kvp.Value, UriKind.Absolute);
+                })
+            //This uses the default values for resilience attributes. To configure your own options, watch this: https://youtu.be/pgeHRp2Otlc?si=LbpmjtLv-d7knWrp
+            .AddStandardResilienceHandler();
+    }
+}
+
+
+builder.Services.AddAutoMapper(typeof(Program)); //Automatically registers all mappers to the DI container
 builder.Services.AddDependencyInjection();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        //Configure your Identity Authority in appSettings
+        //Configure your Identity Authority in appsettings.json or appsettings.{env}.json
 
-        var configSection = configuration.GetSection(IdentitySettings.Identity);
-        var identity = configSection.Get<IdentitySettings>();
-        options.Authority = identity!.AuthAddress;
+        var identityOptions = envConfiguration.GetSection(IdentityOptions.Identity).Get<IdentityOptions>();
+        options.Authority = identityOptions!.AuthAddress;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -106,7 +140,8 @@ builder.Services.AddCors(options =>
         });
 });
 
-var connectionString = configuration.GetConnectionString("DefaultConnection");
+var connectionString = envConfiguration.GetConnectionString("DefaultConnection");
+
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString!);
@@ -128,7 +163,7 @@ builder.Services.AddHangfire(config =>
     {
         Attempts = 7, // Number of retry attempts
         DelaysInSeconds = [10, 20, 30, 1800, 3600, 7200, 10800], // Delays between retries in seconds
-        OnAttemptsExceeded = AttemptsExceededAction.Fail // Fails after retry limit exceeded
+        OnAttemptsExceeded = AttemptsExceededAction.Fail, // Fails after retry limit exceeded
     });
 });
 
@@ -136,7 +171,7 @@ builder.Services.AddHangfireServer();
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.With(new LogEnricher())
-    .ReadFrom.Configuration(configuration)
+    .ReadFrom.Configuration(envConfiguration)
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -174,6 +209,7 @@ app.UseHttpsRedirection();
 app.MapHealthChecks("/_health");
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();

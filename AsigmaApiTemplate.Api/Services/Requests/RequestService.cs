@@ -1,14 +1,16 @@
 using AsigmaApiTemplate.Api.Helpers;
+using AsigmaApiTemplate.Api.Services.Identity;
 using IdentityModel.Client;
 
 namespace AsigmaApiTemplate.Api.Services.Requests;
 
-public class RequestService(IHttpClientFactory httpClientFactory) : IRequestService
+public class RequestService(IHttpClientFactory httpClientFactory, IIdentityHelperService identityHelperService)
+    : IRequestService
 {
     public async Task<string> GetAsync(string endpoint, string clientName, object? parameters = null)
     {
         var httpClient = httpClientFactory.CreateClient(clientName);
-        var token = await IdentityHelpers.GetAccessTokenAsync();
+        var token = await identityHelperService.GetAccessTokenAsync();
         httpClient.SetBearerToken(token);
 
         var url = string.IsNullOrEmpty(parameters?.ToQueryString())
@@ -36,7 +38,7 @@ public class RequestService(IHttpClientFactory httpClientFactory) : IRequestServ
     public async Task<string> PostAsync(string endpoint, string clientName, object data)
     {
         var httpClient = httpClientFactory.CreateClient(clientName);
-        var token = await IdentityHelpers.GetAccessTokenAsync();
+        var token = await identityHelperService.GetAccessTokenAsync();
         httpClient.SetBearerToken(token);
 
         var response = await httpClient.PostAsJsonAsync(endpoint, data);
@@ -49,7 +51,7 @@ public class RequestService(IHttpClientFactory httpClientFactory) : IRequestServ
     public async Task<string> PutAsync(string endpoint, string clientName, Guid id, object data)
     {
         var httpClient = httpClientFactory.CreateClient(clientName);
-        var token = await IdentityHelpers.GetAccessTokenAsync();
+        var token = await identityHelperService.GetAccessTokenAsync();
         httpClient.SetBearerToken(token);
         var url = $"{endpoint}/{id}";
 
@@ -62,7 +64,7 @@ public class RequestService(IHttpClientFactory httpClientFactory) : IRequestServ
     public async Task DeleteAsync(string endpoint, string clientName, Guid id)
     {
         var httpClient = httpClientFactory.CreateClient(clientName);
-        var token = await IdentityHelpers.GetAccessTokenAsync();
+        var token = await identityHelperService.GetAccessTokenAsync();
         httpClient.SetBearerToken(token);
         var requestUri = $"{endpoint}/{id}";
         var response = await httpClient.DeleteAsync(requestUri);

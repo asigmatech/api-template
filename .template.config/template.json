@@ -10,7 +10,7 @@
         "**/*"
     ],
     "sourceExclude": [
-        "README.md",
+        "**/README.md",
         "images/**"
     ],
     "tags": {
