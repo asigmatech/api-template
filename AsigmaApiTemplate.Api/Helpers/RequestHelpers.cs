@@ -13,11 +13,13 @@ public static class RequestHelpers
         }
 
         var properties = from p in obj.GetType().GetProperties()
-            where p.GetValue(obj, null) != null
-            select p.Name + "=" + HttpUtility.UrlEncode(p.GetValue(obj, null).ToString());
+            let value = p.GetValue(obj, null)
+            where value != null
+            select p.Name + "=" + HttpUtility.UrlEncode(value?.ToString() ?? string.Empty);
 
         return "?" + string.Join("&", properties.ToArray());
     }
+
 
     public static string GetBaseUrl(this string baseUrl)
     {
@@ -28,5 +30,4 @@ public static class RequestHelpers
 
         return result!;
     }
-
 }

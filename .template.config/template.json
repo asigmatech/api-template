@@ -6,12 +6,12 @@
     "name": "ASIGMA ASP.NET Core Web API",
     "shortName": "asigmaaspwebapi",
     "sourceName": "AsigmaApiTemplate",
+    "description": "An ASP.NET Core Web API template designed to streamline your API project setup. It follows industry best practices and provides all the essential boilerplate functionality, allowing you to focus on shipping features to your clients faster.",
     "sourceInclude": [
         "**/*"
     ],
     "sourceExclude": [
-        "**/README.md",
-        "images/**"
+        "README.md"
     ],
     "tags": {
         "language": "C#",

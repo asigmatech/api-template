@@ -1,6 +1,6 @@
 # ASP.NET Core Web API Template
 
-Elevate your API development workflow with a ready-to-use ASP.NET Core Web API template. Built on **.NET 8.0**, it focuses on **best practices** and **rapid setup**, so you can ship features faster.
+Elevate your API development workflow with a ready-to-use ASP.NET Core Web API template. It follows industry best practices and provides all the essential boilerplate functionality, allowing you to focus on shipping features to your clients faster.
 
 ## Why This Template?
 - **Repository/Service Pattern** – Streamlined data access using a pattern based on separation of concerns.
@@ -29,21 +29,25 @@ Elevate your API development workflow with a ready-to-use ASP.NET Core Web API t
 ---
 
 ## Setup Instructions
-1. **Install the Template**
+1. **If you are upgrading from an older version, first uninstall the previous version to avoid conflicts**
    ```bash
-   dotnet new install ASIGMA.AspNetCore.API.Template::1.0.5
+   dotnet new uninstall ASIGMA.AspNetCore.API.Template
    ```
-2. **Create a New Project**
+2. **Install the Template**
+   ```bash
+   dotnet new install ASIGMA.AspNetCore.API.Template
+   ```
+3. **Create a New Project**
    ```bash
    dotnet new asigmaaspwebapi -n MyAwesomeApi
    ```
-3. **Restore & Run**
+4. **Restore & Run**
    ```bash
    cd MyAwesomeApi
    dotnet restore
    dotnet run
    ```
-4. **Explore Swagger**
+5. **Explore Swagger**
     - Navigate to `https://localhost:<port>/swagger` to view the auto-generated API docs.
 
 ---
