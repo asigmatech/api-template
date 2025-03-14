@@ -1,22 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
-  <metadata>
-    <id>ASIGMA.AspNetCore.API.Template</id>
-    <version>1.0.1</version>
-    <description>
-      An ASP.NET Core Web API template
-    </description>
-    <authors>ASIGMA Technology Services</authors>
-    <license type="expression">Apache-2.0</license>
-    <packageTypes>
-      <packageType name="Template" />
-    </packageTypes>
-    <readme>docs\README.md</readme>
-    <icon>images\icon.png</icon>
-  </metadata>
-  <files>
-    <file src="..\AsigmaApiTemplate\*.*" exclude="..\AsigmaApiTemplate\bin\**\*.*;..\AsigmaApiTemplate\obj\**\*.*" target="AsigmaApiTemplate" />
-    <file src="..\AsigmaApiTemplate\README.md" target="docs\" />
-    <file src="..\AsigmaApiTemplate\images\icon.png" target="images\" />
-  </files>  
+    <metadata>
+        <id>ASIGMA.AspNetCore.API.Template</id>
+        <version>2.0.0</version>
+        <description>
+            An ASP.NET Core Web API template designed to streamline your API project setup. It follows industry best practices and provides all the essential boilerplate functionality, allowing you to focus on shipping features to your clients faster.</description>
+        <authors>ASIGMA Technology Services</authors>
+        <license type="expression">MIT</license>
+        <packageTypes>
+            <packageType name="Template"/>
+        </packageTypes>
+        <readme>README.md</readme>
+        <icon>images\icon.png</icon>
+        <releaseNotes>What's New in Version 2.0.0
+            
+            1. POWERFUL DATA RETRIEVAL METHODS
+                - Generic and reusable data retrieval methods with `Include` and `ThenInclude` for pulling related entities in one query
+            
+            2. EXTERNAL API CALLS
+                - Pre-configured DI registration for Named `HttpClients`
+                - Pre-configured Request service that uses `HttpClientFactory` to make API calls
+            
+            3. IOPTIONS PATTERN
+                - Simplifies configuration management and testing with typed settings
+            
+            4. HANGFIRE RETRIES
+                - Built-in retry configuration for background tasks, gracefully handling transient failures
+            
+            5. ENHANCED LOG ENRICHER
+                - Enrich logs with the API name for better traceability
+            
+            6. IDENTITY HELPER (OAUTH2)
+                - Methods that retrieve access tokens using any discovery document, reducing duplicated code
+        </releaseNotes>
+
+        <!-- Here’s the important part: -->
+        <tags>aspnetcore webapi asigma template api dotnet</tags>
+
+    </metadata>
+    <files>
+        <!-- Include the entire template as content -->
+        <file src="**\*.*"
+              exclude="bin\**\*.*;obj\**\*.*;*.nupkg;images\icon.png"
+              target="content\" />
+
+        <!-- Explicitly place the icon at the package root images/ folder -->
+        <file src="images\icon.png" target="images\" />
+
+        <!-- Ensure the README.md is also at the package root if used -->
+        <file src="README.md" target="" />
+    </files>
+
+
 </package>

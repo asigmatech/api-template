@@ -4,7 +4,6 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
-readme.md
 
 .vs
 .idea
@@ -12,6 +11,7 @@ AsigmaApiTemplate.sln.DotSettings
 AsigmaApiTemplate.sln.DotSettings.user
 
 **/logs
+
 
 # User-specific files
 *.suo
@@ -223,6 +223,9 @@ project.lock.json
 *.feature.cs
 *.feature.xlsx.*
 *.Specs_*.html
+
+# UWP Projects
+AppPackages/
 
 #####
 # End of core ignore list, below put you custom 'per project' settings (patterns or path)

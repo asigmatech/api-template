@@ -6,15 +6,11 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace AsigmaApiTemplate.Api.Helpers
 {
-    public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
+    public class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) : IConfigureOptions<SwaggerGenOptions>
     {
-        private readonly IApiVersionDescriptionProvider _provider;
-
-        public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) => _provider = provider;
-
         public void Configure(SwaggerGenOptions options)
         {
-            foreach (var description in _provider.ApiVersionDescriptions)
+            foreach (var description in provider.ApiVersionDescriptions)
             {
                 options.SwaggerDoc(description.GroupName, CreateInfoForApiVersion(description));
             }
@@ -31,7 +27,6 @@ namespace AsigmaApiTemplate.Api.Helpers
                 Version = description.ApiVersion.ToString(),
                 Description = $"An api for {projectName[..^4]}",
                 Contact = new OpenApiContact { Name = "ASIGMA Technology Services", Email = "asigmatech@gmail.com" },
-                //License = new OpenApiLicense { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
             };
 
             if (description.IsDeprecated)
