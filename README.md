@@ -11,20 +11,23 @@ Elevate your API development workflow with a ready-to-use ASP.NET Core Web API t
 
 ---
 
-## What's New in Version 2.0.0
+## What's New in Version 2.0.1
 1. **Powerful data retrieval methods**
-    - Generic and reusable data retrieval methods with `Include` and `ThenInclude` methods to pull related entities in one query
+   - Generic and reusable data retrieval methods with `Include` and `ThenInclude` methods to pull related entities in one query
 2. **External API Calls**
-    - Pre-configured DI registration for Named `HttpClients`
-    - Pre-configured Request service that uses the recommended`HttpClientFactory` to make API calls
+   - Pre-configured DI registration for Named `HttpClients`
+   - Pre-configured Request service that uses the recommended `HttpClientFactory` to make API calls
 3. **IOptions Pattern**
-    - Simplify configuration management and testing with typed settings
+   - Simplifies configuration management and testing with typed settings
 4. **Hangfire Retries**
-    - Built-in retry configuration for background tasks, handling transient failures gracefully
+   - Built-in retry configuration for background tasks, handling transient failures gracefully
 5. **Enhanced Log Enricher**
-    - Enrich logs with the API name for better traceability
+   - Enrich logs with the API name for better traceability
 6. **IdentityHelper (OAuth2)**
-    - Methods that retrieve access tokens using any discovery document, reducing duplicated code
+   - Methods that retrieve access tokens using any discovery document, reducing duplicated code
+7. **Extra Package Information**
+   - Enhanced package metadata by specifying supported target frameworks, improving discoverability across the .NET ecosystem
+   - Included [source repository](https://github.com/asigmatech/api-template) details to facilitate open-source feedback and community contributions
 
 ---
 
