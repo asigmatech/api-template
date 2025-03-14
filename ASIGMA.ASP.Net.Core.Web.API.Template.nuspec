@@ -2,53 +2,70 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
     <metadata>
         <id>ASIGMA.AspNetCore.API.Template</id>
-        <version>2.0.0</version>
+        <version>2.0.1</version>
         <description>
-            An ASP.NET Core Web API template designed to streamline your API project setup. It follows industry best practices and provides all the essential boilerplate functionality, allowing you to focus on shipping features to your clients faster.</description>
+            An ASP.NET Core Web API template designed to streamline your API project setup. It follows industry best
+            practices and provides all the essential boilerplate functionality, allowing you to focus on shipping
+            features to your clients faster.
+        </description>
         <authors>ASIGMA Technology Services</authors>
         <license type="expression">MIT</license>
+        <repository type="git" url="https://github.com/asigmatech/api-template.git" branch="main"/>
+        <projectUrl>https://asigmagroup.com/technology-services/</projectUrl>
         <packageTypes>
             <packageType name="Template"/>
         </packageTypes>
         <readme>README.md</readme>
         <icon>images\icon.png</icon>
-        <releaseNotes>What's New in Version 2.0.0
-            
+        <releaseNotes>
+            What's New in Version 2.0.1
+
             1. POWERFUL DATA RETRIEVAL METHODS
-                - Generic and reusable data retrieval methods with `Include` and `ThenInclude` for pulling related entities in one query
-            
+            - Generic and reusable data retrieval methods with `Include` and `ThenInclude` for pulling related entities in one query
+
             2. EXTERNAL API CALLS
-                - Pre-configured DI registration for Named `HttpClients`
-                - Pre-configured Request service that uses `HttpClientFactory` to make API calls
-            
+            - Pre-configured DI registration for Named `HttpClients`
+            - Pre-configured Request service that uses `HttpClientFactory` to make API calls
+
             3. IOPTIONS PATTERN
-                - Simplifies configuration management and testing with typed settings
-            
+            - Simplifies configuration management and testing with typed settings
+
             4. HANGFIRE RETRIES
-                - Built-in retry configuration for background tasks, gracefully handling transient failures
-            
+            - Built-in retry configuration for background tasks, gracefully handling transient failures
+
             5. ENHANCED LOG ENRICHER
-                - Enrich logs with the API name for better traceability
-            
+            - Enrich logs with the API name for better traceability
+
             6. IDENTITY HELPER (OAUTH2)
-                - Methods that retrieve access tokens using any discovery document, reducing duplicated code
+            - Methods that retrieve access tokens using any discovery document, reducing duplicated code
+
+            7. EXTRA PACKAGE INFORMATION
+            - Enhanced package metadata by specifying supported target frameworks, improving discoverability across the .NET ecosystem
+            - Included source repository details to facilitate open-source feedback and community contributions
         </releaseNotes>
+        <dependencies>
+            <group targetFramework="net8.0"/>
+            <group targetFramework="net7.0"/>
+        </dependencies>
+
 
         <!-- Here’s the important part: -->
-        <tags>aspnetcore webapi asigma template api dotnet</tags>
+        <tags>aspnetcore webapi template api dotnet microservices boilerplate dependency-injection</tags>
+        <owners>ASIGMA Technology Services</owners>
+
 
     </metadata>
     <files>
         <!-- Include the entire template as content -->
         <file src="**\*.*"
               exclude="bin\**\*.*;obj\**\*.*;*.nupkg;images\icon.png"
-              target="content\" />
+              target="content\"/>
 
         <!-- Explicitly place the icon at the package root images/ folder -->
-        <file src="images\icon.png" target="images\" />
+        <file src="images\icon.png" target="images\"/>
 
         <!-- Ensure the README.md is also at the package root if used -->
-        <file src="README.md" target="" />
+        <file src="README.md" target=""/>
     </files>
 
 
