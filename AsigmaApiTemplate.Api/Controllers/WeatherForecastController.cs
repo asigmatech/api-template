@@ -36,6 +36,7 @@ public class WeatherForecastController(
         Log.Information("Received request for weather forecast version 1.0: {@SearchWeatherForecast}", search);
         
 
+        
         try
         {
             var predicate = PredicateBuilder.BuildWeatherForecastPredicate(search);
