@@ -56,3 +56,6 @@ Elevate your API development workflow with a ready-to-use ASP.NET Core Web API t
 This template is distributed under the **MIT License**, allowing you to use, modify, and distribute it freely for both commercial and personal projects.
 
 Enjoy building your next API with minimal setup and maximum productivity! Feel free to open **issues** or **pull requests** to help improve this template.
+
+## Feedback & Contributing
+This ASP.NET Core Web API Template is released as open source under the MIT license. Bug reports and contributions are welcome at the [GitHub repository](https://github.com/asigmatech/api-template).
