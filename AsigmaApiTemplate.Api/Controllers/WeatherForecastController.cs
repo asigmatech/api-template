@@ -34,6 +34,7 @@ public class WeatherForecastController(
     public async Task<IActionResult> GetWeatherForecastsV1Async([FromQuery] SearchWeatherForecast search)
     {
         Log.Information("Received request for weather forecast version 1.0: {@SearchWeatherForecast}", search);
+        
 
         try
         {
